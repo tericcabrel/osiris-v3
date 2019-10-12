@@ -9,7 +9,7 @@ import javacard.framework.*;
 public class Osiris extends Applet {
 
     /*********************** Constants ***************************/ 
-    public static final byte CLA_OSIRIS = (byte) 0X3A; 
+    public static final byte CLA_OSIRIS = (byte) 0x3A; 
     public static final byte INS_GET_DATA = 0x00;
     public static final byte INS_SET_DATA = 0x01;
     public static final byte INS_SET_NAME = 0x02;
