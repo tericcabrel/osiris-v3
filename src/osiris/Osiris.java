@@ -129,15 +129,17 @@ public class Osiris extends Applet {
             case INS_SET_DATA:
                 apdu.setIncomingAndReceive();
                 
-                short uidLength = Utils.getDataLength(buffer, ISO7816.OFFSET_CDATA, DATA_DELIMITER);
-                uid = Utils.getDataFromBuffer(buffer, ISO7816.OFFSET_CDATA, uidLength);
-                
-                short nameStartIndex = (short) (ISO7816.OFFSET_CDATA + uidLength + 1);
-                short nameLength = Utils.getDataLength(buffer, nameStartIndex, DATA_DELIMITER);
-                name = Utils.getDataFromBuffer(buffer, nameStartIndex, nameLength);
-                
-                short birthDateLength = (short) (apdu.getIncomingLength() - (uidLength + nameLength + 2));
-                birthDate = Utils.getDataFromBuffer(buffer, (short) (nameStartIndex + nameLength + 1), birthDateLength);
+                JCSystem.beginTransaction();
+                    short uidLength = Utils.getDataLength(buffer, ISO7816.OFFSET_CDATA, DATA_DELIMITER);
+                    uid = Utils.getDataFromBuffer(buffer, ISO7816.OFFSET_CDATA, uidLength);
+
+                    short nameStartIndex = (short) (ISO7816.OFFSET_CDATA + uidLength + 1);
+                    short nameLength = Utils.getDataLength(buffer, nameStartIndex, DATA_DELIMITER);
+                    name = Utils.getDataFromBuffer(buffer, nameStartIndex, nameLength);
+
+                    short birthDateLength = (short) (apdu.getIncomingLength() - (uidLength + nameLength + 2));
+                    birthDate = Utils.getDataFromBuffer(buffer, (short) (nameStartIndex + nameLength + 1), birthDateLength);
+                JCSystem.commitTransaction();
                 break;
             case INS_SET_NAME:
                 apdu.setIncomingAndReceive();
