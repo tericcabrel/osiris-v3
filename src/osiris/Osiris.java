@@ -1,9 +1,3 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
-
 package osiris;
 
 import javacard.framework.*;
@@ -14,12 +8,22 @@ import javacard.framework.*;
  */
 public class Osiris extends Applet {
 
-    /******************** Constants ************************/ 
+    /*********************** Constants ***************************/ 
     public static final byte CLA_OSIRIS = (byte) 0X3A; 
-    public static final byte INS_INCREMENTER_COMPTEUR= 0x00; 
+    public static final byte INS_GET_DATA = 0x00;
+    public static final byte INS_SET_DATA = 0x01;
+    public static final byte INS_SET_NAME = 0x02;
+    public static final byte INS_SET_BIRTHDATE = 0x03;
+    public static final byte INS_RESET_DATA = 0x04;
     
+    /*********************** Variables ***************************/
+    // Unique identifier that represent the user
     private byte[] uid;
+    
+    // The name of the user
     private byte[] name;
+    
+    // The date of birth of the user
     private byte[] birthDate;
     
     /**
@@ -41,6 +45,9 @@ public class Osiris extends Applet {
      */
     protected Osiris() {
         register();
+        uid = new byte[] { };
+        name = new byte[] { };
+        birthDate = new byte[] { };
     }
 
     /**
