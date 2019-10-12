@@ -16,6 +16,8 @@ public class Osiris extends Applet {
     public static final byte INS_SET_BIRTHDATE = 0x03;
     public static final byte INS_RESET_DATA = 0x04;
     
+    public static final byte DATA_DELIMITER = 0x7c;
+    
     /*********************** Variables ***************************/
     // Unique identifier that represent the user
     private byte[] uid;
@@ -77,14 +79,14 @@ public class Osiris extends Applet {
                 }
                 
                 // Add a separator between uid and name
-                buffer[i] = 0x7c;
+                buffer[i] = DATA_DELIMITER;
                 
                 for(i = 0; i < name.length; i++) {
                     buffer[(short) (uid.length + 1 + i)] = name[i];
                 }
                 
                 // Add a separator between name and birth date
-                buffer[ (short) (uid.length + name.length + 1) ] = 0x7c;
+                buffer[ (short) (uid.length + name.length + 1) ] = DATA_DELIMITER;
                 
                 for(i = 0; i < birthDate.length; i++) {
                     buffer[ (short) (uid.length + name.length + 2 + i) ] = birthDate[i];
@@ -93,7 +95,17 @@ public class Osiris extends Applet {
                 apdu.setOutgoingAndSend((short)0, (short) (uid.length + name.length + birthDate.length + 2));
                 break;
             case INS_SET_DATA:
+                apdu.setIncomingAndReceive();
                 
+                short uidLength = Utils.getDataLength(buffer, ISO7816.OFFSET_CDATA, DATA_DELIMITER);
+                uid = Utils.getDataFromBuffer(buffer, ISO7816.OFFSET_CDATA, uidLength);
+                
+                short nameStartIndex = (short) (ISO7816.OFFSET_CDATA + uidLength + 1);
+                short nameLength = Utils.getDataLength(buffer, nameStartIndex, DATA_DELIMITER);
+                name = Utils.getDataFromBuffer(buffer, nameStartIndex, nameLength);
+                
+                short birthDateLength = (short) (apdu.getIncomingLength() - (uidLength + nameLength + 2));
+                birthDate = Utils.getDataFromBuffer(buffer, (short) (nameStartIndex + nameLength + 1), birthDateLength);
                 break;
             case INS_SET_NAME:
                 
