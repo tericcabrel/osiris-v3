@@ -9,16 +9,34 @@ import javacard.framework.*;
 public class Osiris extends Applet {
 
     /*********************** Constants ***************************/ 
-    public static final byte CLA_OSIRIS = (byte) 0x3A; 
-    public static final byte INS_GET_DATA = 0x00;
-    public static final byte INS_SET_DATA = 0x01;
-    public static final byte INS_SET_NAME = 0x02;
-    public static final byte INS_SET_BIRTHDATE = 0x03;
-    public static final byte INS_RESET_DATA = 0x04;
+    private static final byte CLA_OSIRIS = (byte) 0x3A; 
+    private static final byte INS_GET_DATA = 0x00;
+    private static final byte INS_SET_DATA = 0x01;
+    private static final byte INS_SET_NAME = 0x02;
+    private static final byte INS_SET_BIRTHDATE = 0x03;
+    private static final byte INS_RESET_DATA = 0x04;
+    private final static byte INS_PIN_AUTH = (byte) 0x05;
+    private final static byte INS_PIN_UNBLOCK = (byte) 0x06;
     
-    public static final byte DATA_DELIMITER = 0x7c;
+    private static final byte DATA_DELIMITER = 0x7c;
+    
+    // Maximum number of incorrect tries before the PIN is blocked
+    private final static byte PIN_TRY_LIMIT =(byte)0x03;
+  
+    // Maximum size PIN
+    private final static byte MAX_PIN_SIZE =(byte)0x08;
+    
+    // Signal that the PIN verification failed
+    private final static short SW_VERIFICATION_FAILED = 0x6300;
+   
+    // Signal the PIN validation is required for an action
+    private final static short SW_PIN_VERIFICATION_REQUIRED = 0x6301;
+    
     
     /*********************** Variables ***************************/
+    // Object responsible for PIN Management
+    OwnerPIN pin;
+    
     // Unique identifier that represent the user
     private byte[] uid;
     
@@ -46,12 +64,26 @@ public class Osiris extends Applet {
      * Only this class's install method should create the applet object.
      */
     protected Osiris() {
-        register();
+        pin = new OwnerPIN(PIN_TRY_LIMIT, MAX_PIN_SIZE);
+   
         uid = new byte[] { };
         name = new byte[] { };
         birthDate = new byte[] { };
+        
+        register();
     }
 
+    public boolean select() {
+        // The applet declines to be selected if the pin is blocked.
+        if ( pin.getTriesRemaining() == 0 ) return false;
+        return true;
+    }
+    
+    public void deselect() {
+        // reset the pin value
+        pin.reset();
+    }
+    
     /**
      * Processes an incoming APDU.
      * 
@@ -109,18 +141,35 @@ public class Osiris extends Applet {
                 break;
             case INS_SET_NAME:
                 apdu.setIncomingAndReceive();
-               
+                // TODO Make sure it's not empty
                 name = Utils.getDataFromBuffer(buffer, ISO7816.OFFSET_CDATA, apdu.getIncomingLength());
                 break;
             case INS_SET_BIRTHDATE:
                 apdu.setIncomingAndReceive();
                
+                // TODO validate date format with regex
                 birthDate = Utils.getDataFromBuffer(buffer, ISO7816.OFFSET_CDATA, apdu.getIncomingLength());
                 break;
             case INS_RESET_DATA:
+                if (!pin.isValidated()) {
+                    ISOException.throwIt(SW_PIN_VERIFICATION_REQUIRED);
+                }
+    
                 uid = new byte[] { };
                 name = new byte[] { };
                 birthDate = new byte[] { };
+                break;
+            case INS_PIN_AUTH:
+                byte byteRead = (byte)(apdu.setIncomingAndReceive());
+   
+                // Check pin the PIN data is read into the APDU buffer
+                // at the offset ISO7816.OFFSET_CDATA the PIN data length = byteRead
+                if (pin.check(buffer, ISO7816.OFFSET_CDATA, byteRead) == false) {
+                    ISOException.throwIt(SW_VERIFICATION_FAILED);
+                }
+                break;
+            case INS_PIN_UNBLOCK:
+                pin.resetAndUnblock();
                 break;
             default:
                 ISOException.throwIt(ISO7816.SW_INS_NOT_SUPPORTED);
