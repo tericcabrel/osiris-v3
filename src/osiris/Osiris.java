@@ -47,9 +47,9 @@ public class Osiris extends Applet {
      */
     protected Osiris() {
         register();
-        uid = new byte[] { 0x65, 0x66, 0x67 };
-        name = new byte[] { 0x68, 0x69, 0x70 };
-        birthDate = new byte[] { 0x71, 0x72, 0x73 };
+        uid = new byte[] { };
+        name = new byte[] { };
+        birthDate = new byte[] { };
     }
 
     /**
@@ -108,13 +108,19 @@ public class Osiris extends Applet {
                 birthDate = Utils.getDataFromBuffer(buffer, (short) (nameStartIndex + nameLength + 1), birthDateLength);
                 break;
             case INS_SET_NAME:
-                
+                apdu.setIncomingAndReceive();
+               
+                name = Utils.getDataFromBuffer(buffer, ISO7816.OFFSET_CDATA, apdu.getIncomingLength());
                 break;
             case INS_SET_BIRTHDATE:
-                
+                apdu.setIncomingAndReceive();
+               
+                birthDate = Utils.getDataFromBuffer(buffer, ISO7816.OFFSET_CDATA, apdu.getIncomingLength());
                 break;
             case INS_RESET_DATA:
-                
+                uid = new byte[] { };
+                name = new byte[] { };
+                birthDate = new byte[] { };
                 break;
             default:
                 ISOException.throwIt(ISO7816.SW_INS_NOT_SUPPORTED);
