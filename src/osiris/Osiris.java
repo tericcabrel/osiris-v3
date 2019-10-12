@@ -45,9 +45,9 @@ public class Osiris extends Applet {
      */
     protected Osiris() {
         register();
-        uid = new byte[] { };
-        name = new byte[] { };
-        birthDate = new byte[] { };
+        uid = new byte[] { 0x65, 0x66, 0x67 };
+        name = new byte[] { 0x68, 0x69, 0x70 };
+        birthDate = new byte[] { 0x71, 0x72, 0x73 };
     }
 
     /**
@@ -71,7 +71,26 @@ public class Osiris extends Applet {
         
         switch(buffer[ISO7816.OFFSET_INS]) {
             case INS_GET_DATA:
+                short i = 0;
+                for(i = 0; i < uid.length; i++) {
+                    buffer[i] = uid[i];
+                }
                 
+                // Add a separator between uid and name
+                buffer[i] = 0x7c;
+                
+                for(i = 0; i < name.length; i++) {
+                    buffer[(short) (uid.length + 1 + i)] = name[i];
+                }
+                
+                // Add a separator between name and birth date
+                buffer[ (short) (uid.length + name.length + 1) ] = 0x7c;
+                
+                for(i = 0; i < birthDate.length; i++) {
+                    buffer[ (short) (uid.length + name.length + 2 + i) ] = birthDate[i];
+                }
+                
+                apdu.setOutgoingAndSend((short)0, (short) (uid.length + name.length + birthDate.length + 2));
                 break;
             case INS_SET_DATA:
                 
