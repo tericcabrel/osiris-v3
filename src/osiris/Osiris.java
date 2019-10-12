@@ -58,6 +58,35 @@ public class Osiris extends Applet {
      *            the incoming APDU
      */
     public void process(APDU apdu) {
-        //Insert your code here
+        // Extract the value of the five first fields of the APDU sent: CLA, INS, P1, P2 and Lc.
+        byte[] buffer = apdu.getBuffer();
+        
+        // Return and error if the applet is not selected
+        if (selectingApplet()) return;
+        
+        if(buffer[ISO7816.OFFSET_CLA] != CLA_OSIRIS){
+            // SW_CLA_NOT_SUPPORTED => SW1 = 0x6E et SW2=0x00
+            ISOException.throwIt(ISO7816.SW_CLA_NOT_SUPPORTED);
+        }
+        
+        switch(buffer[ISO7816.OFFSET_INS]) {
+            case INS_GET_DATA:
+                
+                break;
+            case INS_SET_DATA:
+                
+                break;
+            case INS_SET_NAME:
+                
+                break;
+            case INS_SET_BIRTHDATE:
+                
+                break;
+            case INS_RESET_DATA:
+                
+                break;
+            default:
+                ISOException.throwIt(ISO7816.SW_INS_NOT_SUPPORTED);
+        }
     }
 }
