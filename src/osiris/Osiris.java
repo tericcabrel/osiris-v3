@@ -24,12 +24,14 @@ public class Osiris extends Applet {
     private final static byte PIN_TRY_LIMIT =(byte)0x03;
   
     // Maximum size PIN
-    private final static byte MAX_PIN_SIZE =(byte)0x08;
+    private final static byte MAX_PIN_SIZE =(byte)0x06;
     
     // Signal that the PIN verification failed
+    // Decimal value: 25344
     private final static short SW_VERIFICATION_FAILED = 0x6300;
    
     // Signal the PIN validation is required for an action
+    // Decimal value: 25345
     private final static short SW_PIN_VERIFICATION_REQUIRED = 0x6301;
     
     
@@ -64,8 +66,12 @@ public class Osiris extends Applet {
      * Only this class's install method should create the applet object.
      */
     protected Osiris() {
+        // Initialize PIN configuration
         pin = new OwnerPIN(PIN_TRY_LIMIT, MAX_PIN_SIZE);
    
+        // Set the default PIN Code to 123456
+        pin.update(new byte[]{ 0x01, 0x02, 0x03, 0x04, 0x05, 0x06 }, (short) 0, (byte) 6);
+
         uid = new byte[] { };
         name = new byte[] { };
         birthDate = new byte[] { };
@@ -73,11 +79,11 @@ public class Osiris extends Applet {
         register();
     }
 
-    public boolean select() {
+    /*public boolean select() {
         // The applet declines to be selected if the pin is blocked.
         if ( pin.getTriesRemaining() == 0 ) return false;
         return true;
-    }
+    }*/
     
     public void deselect() {
         // reset the pin value
@@ -101,6 +107,10 @@ public class Osiris extends Applet {
         if(buffer[ISO7816.OFFSET_CLA] != CLA_OSIRIS){
             // SW_CLA_NOT_SUPPORTED => SW1 = 0x6E et SW2=0x00
             ISOException.throwIt(ISO7816.SW_CLA_NOT_SUPPORTED);
+        }
+        
+        if(pin.getTriesRemaining() == 0 && buffer[ISO7816.OFFSET_INS] != INS_PIN_UNBLOCK) {
+            ISOException.throwIt(ISO7816.SW_SECURITY_STATUS_NOT_SATISFIED);
         }
         
         switch(buffer[ISO7816.OFFSET_INS]) {
