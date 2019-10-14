@@ -59,7 +59,7 @@ public class Osiris extends Applet {
      *            the length in bytes of the parameter data in bArray
      */
     public static void install(byte[] bArray, short bOffset, byte bLength) {
-        new Osiris();
+        (new Osiris()).register();
     }
 
     /**
@@ -75,8 +75,6 @@ public class Osiris extends Applet {
         uid = new byte[] { };
         name = new byte[] { };
         birthDate = new byte[] { };
-        
-        register();
     }
 
     /*public boolean select() {
