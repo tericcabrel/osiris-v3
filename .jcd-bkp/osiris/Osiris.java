@@ -67,6 +67,7 @@ public class Osiris extends Applet {
      *            the length in bytes of the parameter data in bArray
      */
     public static void install(byte[] bArray, short bOffset, byte bLength) {
+        //--JCD-INSTALL
         (new Osiris()).register();
     }
 
@@ -114,6 +115,8 @@ public class Osiris extends Applet {
      *            the incoming APDU
      */
     public void process(APDU apdu) {
+        //--JCD-PROCESS{apdu}
+        
         // Extract the value of the five first fields of the APDU sent: CLA, INS, P1, P2 and Lc.
         byte[] buffer = apdu.getBuffer();
         
@@ -150,7 +153,7 @@ public class Osiris extends Applet {
                     buffer[ (short) (uid.length + name.length + 2 + i) ] = birthDate[i];
                 }
                 byte fpLength = (byte) fingerPrint.length;
-                
+                //! calling doFoo with buffer {fpLength}
                 short finalLength = (short) (uid.length + name.length + birthDate.length + 2 + 2);
                 
                 buffer[(short)(finalLength - 2)] = DATA_DELIMITER;
@@ -238,20 +241,15 @@ public class Osiris extends Applet {
                         dataCount[0] = (byte) 0;
                     }
                 }
+                    
                 // TODO Make sure it's not empty
                 // fingerPrint = Utils.getDataFromBuffer(buffer, ISO7816.OFFSET_CDATA, apdu.getIncomingLength());
                 break;
             case INS_GET_FINGERPRINT:
-                    // array copy: (src, offset, target, offset,copy size)
-                    short t = (short)(buffer[ISO7816.OFFSET_P2] & 0xFF);
-                    short o = (short)(buffer[ISO7816.OFFSET_P1] & 0xFF);
-                    
-                    Util.arrayCopyNonAtomic(fingerPrint, o, buffer, ISO7816.OFFSET_CDATA, t);
-                    apdu.setOutgoingAndSend(ISO7816.OFFSET_CDATA, t);
                 // apdu.setOutgoing();
                 // apdu.setOutgoingLength((short)fingerPrint.length);
                 // apdu.sendBytesLong(fingerPrint, (short)0, (short)fingerPrint.length);
-                /*short toSend = (short) fingerPrint.length;      
+                    short toSend = (short) fingerPrint.length;
                     short counter = 0;
                     
                     try {
@@ -275,7 +273,7 @@ public class Osiris extends Applet {
                         } else {
                             ISOException.throwIt((short) 0x8888);
                         }
-                    }*/
+                    }
                 break;
             default:
                 ISOException.throwIt(ISO7816.SW_INS_NOT_SUPPORTED);
