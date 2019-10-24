@@ -33,14 +33,18 @@ public class Utils {
         if (length == 4) {
             result += (short)(buffer[startIndex] & 0xFF) * 1000;
             result += (short)(buffer[(short)(startIndex + 1)] & 0xFF) * 100;
-            result += (short)(buffer[(short)(startIndex + 2)] & 0xFF) * 100;
+            result += (short)(buffer[(short)(startIndex + 2)] & 0xFF) * 10;
             result += (short)(buffer[(short)(startIndex + 3)] & 0xFF);
         } else if (length == 3) {
             result += (short)(buffer[startIndex] & 0xFF) * 100;
-            result += (short)(buffer[(short)(startIndex + 1)] & 0xFF) * 100;
+            result += (short)(buffer[(short)(startIndex + 1)] & 0xFF) * 10;
             result += (short)(buffer[(short)(startIndex + 2)] & 0xFF);
         }
         
         return result;
+    }
+    
+    public static byte[] numberToByteArray(short n) {
+        return new byte[] { (byte) ((n & 0xFF00) >> 8), (byte) (n & 0x00FF) };
     }
 }

@@ -53,9 +53,6 @@ public class Osiris extends Applet {
     // The fingerprint's template of the user
     private byte[] fingerPrint;
     
-    byte[] fingerInfo;
-    byte[] dataCount;
-    
     /**
      * Installs this applet.
      * 
@@ -89,15 +86,6 @@ public class Osiris extends Applet {
     public boolean select() {
         // The applet declines to be selected if the pin is blocked.
         // if ( pin.getTriesRemaining() == 0 ) return false;
-        
-        fingerInfo = JCSystem.makeTransientByteArray((short)3, JCSystem.CLEAR_ON_DESELECT);
-        dataCount = JCSystem.makeTransientByteArray((short)1, JCSystem.CLEAR_ON_DESELECT);
-    
-        fingerInfo[0] = 0x00;
-        fingerInfo[1] = 0x00;
-        fingerInfo[2] = 0x00;
-        dataCount[0] = 0x00;
-        
         return true;
     }
     
@@ -149,12 +137,16 @@ public class Osiris extends Applet {
                 for(i = 0; i < birthDate.length; i++) {
                     buffer[ (short) (uid.length + name.length + 2 + i) ] = birthDate[i];
                 }
-                byte fpLength = (byte) fingerPrint.length;
                 
-                short finalLength = (short) (uid.length + name.length + birthDate.length + 2 + 2);
+                byte[] fpLengthInBytes = Utils.numberToByteArray((short) fingerPrint.length);
                 
-                buffer[(short)(finalLength - 2)] = DATA_DELIMITER;
-                buffer[(short)(finalLength - 1)] = fpLength;
+                short finalLength = (short) (uid.length + name.length + birthDate.length + 3 + fpLengthInBytes.length);
+                
+                buffer[(short)(finalLength - (1 + fpLengthInBytes.length))] = DATA_DELIMITER;
+                
+                for(i = 0; i < fpLengthInBytes.length; i++) {
+                    buffer[ (short) (finalLength - (fpLengthInBytes.length - i)) ] = fpLengthInBytes[i];
+                }
                 
                 apdu.setOutgoingAndSend((short)0, finalLength);
                 break;
