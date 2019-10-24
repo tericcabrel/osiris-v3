@@ -45,6 +45,6 @@ public class Utils {
     }
     
     public static byte[] numberToByteArray(short n) {
-        return new byte[] { (byte) ((n & 0xFF00) >> 8), (byte) (n & 0x00FF) };
+        return new byte[] { (byte) ((n & (short)0xFF00) >> (short)8), (byte) (n & (short)0x00FF) };
     }
 }
