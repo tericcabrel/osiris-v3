@@ -1,8 +1,0 @@
-[main]
-source-folder = src
-debuginfo-path = jcd.debuginfo
-persist-log = true
-log-size = 200
-cla = D0
-ins = 66
-

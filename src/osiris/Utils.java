@@ -26,4 +26,21 @@ public class Utils {
         }
         return bytes;
     }
+    
+    public static short byteArrayDataToNumber(byte[] buffer, short startIndex, short length) {
+        short result = 0;
+        
+        if (length == 4) {
+            result += (short)(buffer[startIndex] & 0xFF) * 1000;
+            result += (short)(buffer[(short)(startIndex + 1)] & 0xFF) * 100;
+            result += (short)(buffer[(short)(startIndex + 2)] & 0xFF) * 100;
+            result += (short)(buffer[(short)(startIndex + 3)] & 0xFF);
+        } else if (length == 3) {
+            result += (short)(buffer[startIndex] & 0xFF) * 100;
+            result += (short)(buffer[(short)(startIndex + 1)] & 0xFF) * 100;
+            result += (short)(buffer[(short)(startIndex + 2)] & 0xFF);
+        }
+        
+        return result;
+    }
 }

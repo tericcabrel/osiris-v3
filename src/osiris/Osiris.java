@@ -207,75 +207,31 @@ public class Osiris extends Applet {
                 pin.resetAndUnblock();
                 break;
             case INS_SET_FINGERPRINT:
-                byte bufferDataLength = (byte)(apdu.setIncomingAndReceive());
+                apdu.setIncomingAndReceive();
                 
                 //We want to start data copy
-                if (fingerInfo[0] == 0x00) {
-                    // If the length equal to 0, it means we want to clear data
-                    if(bufferDataLength == 3 && buffer[ISO7816.OFFSET_CDATA] == 0x00) {
-                        fingerPrint = new byte[] { };
-                    } else {
-                        fingerInfo[0] = (byte) 638;
-                        fingerInfo[1] = buffer[ISO7816.OFFSET_CDATA + 1];
-                        fingerInfo[2] = (byte) 7;
-                        fingerPrint = new byte[(short) 638];
-                    }
+                if (buffer[ISO7816.OFFSET_P1] == 0x00 && buffer[ISO7816.OFFSET_P2] == 0x00) {
+                    short dataLength = Utils.byteArrayDataToNumber(buffer, ISO7816.OFFSET_CDATA, apdu.getIncomingLength());
+                    fingerPrint = new byte[dataLength];
                 } else {
-                    // copying the apdu data into byte array Data
-                    // array copy: (src, offset, target, offset,copy size)
-                    Util.arrayCopy(
-                            buffer,
-                            (short) ISO7816.OFFSET_CDATA,
-                            fingerPrint,
-                            (short) ((short) dataCount[0] * 100),
-                            (short) bufferDataLength
+                    // Copying the apdu data into byte array Data
+                    // Array copy: (src, offset, target, offset,copy size)
+                    Util.arrayCopyNonAtomic(
+                        buffer,
+                        apdu.getOffsetCdata(),
+                        fingerPrint,
+                        (short) ((short) (buffer[ISO7816.OFFSET_P1] & 0xFF) * 100),
+                        (byte) (buffer[ISO7816.OFFSET_P2] & 0xFF)
                     );
-                    dataCount[0] = (byte) ((short) dataCount[0] + 1);
-                    
-                    // If all data copied, reset the info
-                    if ((short)dataCount[0] > (short) fingerInfo[2]) {
-                        fingerInfo = new byte[]{ 0x00, 0x00, 0x00 };
-                        dataCount[0] = (byte) 0;
-                    }
                 }
-                // TODO Make sure it's not empty
-                // fingerPrint = Utils.getDataFromBuffer(buffer, ISO7816.OFFSET_CDATA, apdu.getIncomingLength());
                 break;
             case INS_GET_FINGERPRINT:
-                    // array copy: (src, offset, target, offset,copy size)
-                    short t = (short)(buffer[ISO7816.OFFSET_P2] & 0xFF);
-                    short o = (short)(buffer[ISO7816.OFFSET_P1] & 0xFF);
-                    
-                    Util.arrayCopyNonAtomic(fingerPrint, o, buffer, ISO7816.OFFSET_CDATA, t);
-                    apdu.setOutgoingAndSend(ISO7816.OFFSET_CDATA, t);
-                // apdu.setOutgoing();
-                // apdu.setOutgoingLength((short)fingerPrint.length);
-                // apdu.sendBytesLong(fingerPrint, (short)0, (short)fingerPrint.length);
-                /*short toSend = (short) fingerPrint.length;      
-                    short counter = 0;
-                    
-                    try {
-                        apdu.setOutgoing();
-                        apdu.setOutgoingLength(toSend);
-                        
-                        while (toSend > 0) {
-                            Util.arrayCopyNonAtomic(fingerPrint, (short) (counter * 32), buffer, (short) 0, (short) 32);
-                            apdu.sendBytes((short) 0, (short) 32);
-                            toSend = (short) (toSend - 32);
-                            counter = (byte) (counter + 1);
-                        }
-                    } catch (Exception e) {
-                        if (e instanceof APDUException) {
-                            APDUException ae = (APDUException) e;
-                            short reason = ae.getReason();
-                            if (reason == APDUException.BAD_LENGTH)
-                                ISOException.throwIt((short) 0x9990);
-                            else
-                                ISOException.throwIt((short) 0x8887);
-                        } else {
-                            ISOException.throwIt((short) 0x8888);
-                        }
-                    }*/
+                // Array copy: (src, offset, target, offset,copy size)
+                short p2 = (short)(buffer[ISO7816.OFFSET_P2] & 0xFF);
+                short p1 = (short)(buffer[ISO7816.OFFSET_P1] & 0xFF);
+
+                Util.arrayCopyNonAtomic(fingerPrint, (short) (p1 * 100), buffer, ISO7816.OFFSET_CDATA, p2);
+                apdu.setOutgoingAndSend(ISO7816.OFFSET_CDATA, p2);
                 break;
             default:
                 ISOException.throwIt(ISO7816.SW_INS_NOT_SUPPORTED);
